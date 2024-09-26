@@ -1,47 +1,51 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Import components
+import Home from './componenets/Home';
 import Login from './componenets/Login';
-import ClaimForm from './componenets/ClaimForm';
-import ClaimResult from './componenets/ClaimResult';
-import RequestAssistance from './componenets/RequestAssistance';
+import Register from './componenets/Register';
+import Dashboard from './componenets/Dashboard';
+import FileClaim from './componenets/FileClaim';
+import ClaimStatus from './componenets/ClaimStatus';
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [claimSubmitted, setClaimSubmitted] = useState(false);
-  const [claimValid, setClaimValid] = useState(null);
-  const [requestAssistance, setRequestAssistance] = useState(false);
+const App = () => {
+  const [user, setUser] = useState(null);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleSubmitClaim = (claimData) => {
-    // Fake validation logic (later replace with API call)
-    const isValid = claimData.policyNumber === "12345"; // mock validation
-    setClaimValid(isValid);
-    setClaimSubmitted(true);
-  };
-
-  const handleRequestAssistance = () => {
-    setRequestAssistance(true);
-  };
-
-  const handleSubmitRequest = (requestData) => {
-    // Log the request and reset form (replace with backend API)
-    console.log("Request Assistance Submitted:", requestData);
-    setRequestAssistance(false);
-    alert('Your request has been submitted. We will contact you shortly.');
+  const logout = () => {
+    axios.post('http://localhost:5000/logout')
+      .then(() => {
+        setUser(null);
+      })
+      .catch(error => console.error('Logout failed', error));
   };
 
   return (
-    <div className="App">
-      {!isLoggedIn && <Login onLogin={handleLogin} />}
-      {isLoggedIn && !claimSubmitted && <ClaimForm onSubmitClaim={handleSubmitClaim} />}
-      {isLoggedIn && claimSubmitted && !requestAssistance && (
-        <ClaimResult isValid={claimValid} onRequestAssistance={handleRequestAssistance} />
-      )}
-      {isLoggedIn && requestAssistance && <RequestAssistance onSubmitRequest={handleSubmitRequest} />}
-    </div>
+    <Router>
+      <div className="App min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex justify-center items-center p-4">
+        <div className="w-full max-w-md">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login setUser={setUser} />} />
+            <Route path="/register" element={<Register setUser={setUser} />} />
+            <Route 
+              path="/dashboard" 
+              element={user ? <Dashboard user={user} logout={logout} /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/file-claim" 
+              element={user ? <FileClaim user={user} /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/claim-status" 
+              element={user ? <ClaimStatus user={user} /> : <Navigate to="/login" />} 
+            />
+          </Routes>
+        </div>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
